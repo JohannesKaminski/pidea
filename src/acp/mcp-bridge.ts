@@ -134,14 +134,14 @@ type RemoteToolsPage = { tools?: RemoteTool[]; nextCursor?: string }
 
 /**
  * Remote tools the IDE MCP server may expose that stay outside the default
- * profile (AGENTS.md): universal execution, debugger launch/control, and
- * breakpoint mutation. Every `xdebug_*` remote name is denied by prefix (the
- * live catalog keeps growing beyond the names pinned here), plus the explicit
- * names below. Explicitly re-allow a reviewed tool with PIDEA_IDE_EXTRA_TOOLS
- * (comma-separated remote names); AllowAll is never implied by this list.
+ * profile (AGENTS.md): debugger launch/control and breakpoint mutation. Every
+ * `xdebug_*` remote name is denied by prefix (the live catalog keeps growing
+ * beyond the names pinned here), plus the explicit names below. Explicitly
+ * re-allow a reviewed tool with PIDEA_IDE_EXTRA_TOOLS (comma-separated remote
+ * names); AllowAll is never implied by this list. The same list applies to
+ * the commands routed through {@link IDE_ROUTER_TOOL}.
  */
 const DEFAULT_IDE_DENYLIST = [
-  'execute_tool',
   'xdebug_set_breakpoint',
   'xdebug_start_debugger_session',
   'xdebug_control_session'
@@ -161,6 +161,29 @@ export function isDefaultDenied(remoteName: string, extra: ReadonlySet<string>):
     (remoteName.startsWith('xdebug_') || (DEFAULT_IDE_DENYLIST as readonly string[]).includes(remoteName)) &&
     !extra.has(remoteName)
   )
+}
+
+/**
+ * Air's `jetbrains_air_ide` server exposes its IDE tools through this one
+ * router tool, which takes a command line such as
+ * `lint_files --files '["a.py"]'`. pi gets the router itself (Air's skills
+ * call it by name); each call's command name is checked against the deny-list.
+ */
+const IDE_ROUTER_TOOL = 'execute_tool'
+
+/**
+ * The command name a router call targets: the first word of `command`, with
+ * quotes and backslashes removed so quoting can't hide a denied name.
+ * Undefined when `command` is not a non-empty string.
+ */
+function routedCommandName(args: Record<string, unknown>): string | undefined {
+  const command = args.command
+  if (typeof command !== 'string') return undefined
+  const name = command
+    .trim()
+    .split(/\s+/, 1)[0]
+    .replace(/["'\\]/g, '')
+  return name.length > 0 ? name : undefined
 }
 
 export class AcpMcpBridge {
@@ -783,6 +806,21 @@ export class AcpMcpBridge {
     if (this.#pending.has(id)) {
       ipc.send({ type: 'error', id, code: 'duplicate_id', message: 'Duplicate request id' })
       return
+    }
+    if (tool.remoteName === IDE_ROUTER_TOOL) {
+      const command = routedCommandName(args)
+      if (command === undefined || isDefaultDenied(command, extraAllowSet())) {
+        ipc.send({
+          type: 'error',
+          id,
+          code: 'denied',
+          message:
+            command === undefined
+              ? `${IDE_ROUTER_TOOL} needs a "command" string`
+              : `IDE command ${command} is excluded from the default profile (re-allow with PIDEA_IDE_EXTRA_TOOLS)`
+        })
+        return
+      }
     }
     const pending: { connectionId: string; remoteName: string; remoteRequestId?: JsonRpcId; cancelled: boolean } = {
       connectionId: tool.connectionId,

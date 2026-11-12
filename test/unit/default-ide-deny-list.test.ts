@@ -3,9 +3,8 @@ import assert from 'node:assert/strict'
 import { extraAllowSet, isDefaultDenied } from '../../src/acp/mcp-bridge.js'
 
 describe('default IDE deny-list', () => {
-  it('denies universal execution and debugger mutation by default', () => {
+  it('denies debugger launch and breakpoint mutation by default', () => {
     const extra = new Set<string>()
-    assert.equal(isDefaultDenied('execute_tool', extra), true)
     assert.equal(isDefaultDenied('xdebug_set_breakpoint', extra), true)
     assert.equal(isDefaultDenied('xdebug_start_debugger_session', extra), true)
     assert.equal(isDefaultDenied('xdebug_control_session', extra), true)
@@ -21,15 +20,17 @@ describe('default IDE deny-list', () => {
 
   it('keeps ordinary IDE tools off the deny-list', () => {
     const extra = new Set<string>()
+    // The router itself is allowed; its routed commands are checked per call.
+    assert.equal(isDefaultDenied('execute_tool', extra), false)
     assert.equal(isDefaultDenied('lint_files', extra), false)
     assert.equal(isDefaultDenied('search_symbol', extra), false)
     assert.equal(isDefaultDenied('run_inspection_kts', extra), false)
   })
 
   it('re-allows a reviewed tool via the override set', () => {
-    const extra = new Set(['execute_tool'])
-    assert.equal(isDefaultDenied('execute_tool', extra), false)
-    assert.equal(isDefaultDenied('xdebug_set_breakpoint', extra), true)
+    const extra = new Set(['xdebug_set_breakpoint'])
+    assert.equal(isDefaultDenied('xdebug_set_breakpoint', extra), false)
+    assert.equal(isDefaultDenied('xdebug_control_session', extra), true)
   })
 
   it('parses the PIDEA_IDE_EXTRA_TOOLS env override', () => {

@@ -77,7 +77,9 @@ IntelliJ sends its built-in MCP server descriptor with each chat (with `use_idea
 
 The bridge opens a direct MCP-over-SSE client against `http://127.0.0.1:<IJ_MCP_SERVER_PORT>/sse` when the descriptor carries that port. It starts the stdio child only when that endpoint is unreachable.
 
-Two allowlists guard the IDE tools. The IDE side reads `idea_mcp_allowed_tools` from `~/.jetbrains/acp.json`: it acts as a deny-all mask plus the named tools, and an omitted key means allow all in current IntelliJ builds. pidea deny-lists `execute_tool` and every `xdebug_*` name. Set `PIDEA_IDE_EXTRA_TOOLS` to a comma-separated list of remote names to re-allow tools you reviewed.
+Two allowlists guard the IDE tools. The IDE side reads `idea_mcp_allowed_tools` from `~/.jetbrains/acp.json`: it acts as a deny-all mask plus the named tools, and an omitted key means allow all in current IntelliJ builds. pidea deny-lists every `xdebug_*` name. Set `PIDEA_IDE_EXTRA_TOOLS` to a comma-separated list of remote names to re-allow tools you reviewed.
+
+Air's IDE server (`jetbrains_air_ide`) offers its tools through one router tool, `execute_tool`, which takes a command line such as `lint_files --files '["src/app.py"]'`. pi gets the router itself, because Air's skills call it by name. pidea checks each call's command name, the first word of `command`, against the same deny-list and rejects a denied one without contacting the IDE. `PIDEA_IDE_EXTRA_TOOLS` re-allows a command by that name.
 
 The session catalog never changes. After you edit IntelliJ MCP settings or the allowlist, open a new chat. Debugger tools register only while an IDE debug session is live: start a debug session and open a new chat to see them.
 

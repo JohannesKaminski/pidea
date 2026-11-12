@@ -476,6 +476,99 @@ describe('AcpMcpBridge', () => {
     await bridge.dispose()
   })
 
+  describe('execute_tool router (Air jetbrains_air_ide)', () => {
+    function routerConn(): FakeConn {
+      const conn = new FakeConn()
+      conn.tools = [
+        {
+          name: 'execute_tool',
+          description: 'Run an IDE command',
+          inputSchema: { type: 'object', properties: { command: { type: 'string' } } }
+        }
+      ]
+      return conn
+    }
+
+    async function callRouter(conn: FakeConn, args: Record<string, unknown>): Promise<any> {
+      const bridge = new AcpMcpBridge(conn as any, [acpServer('air', 'jetbrains_air_ide')], 'router-session')
+      const settings = await bridge.start()
+      const { sock, lines, nextMessage } = await connectIpc(settings)
+      try {
+        sock.write(
+          JSON.stringify({ type: 'call', id: 'router-1', tool: 'ide_jetbrains_air_ide_execute_tool', args }) + '\n'
+        )
+        return await nextMessage()
+      } finally {
+        lines.close()
+        sock.destroy()
+        await bridge.dispose()
+      }
+    }
+
+    function routedCalls(conn: FakeConn): any[] {
+      return conn.calls.filter(call => call.method === 'mcp/message' && call.params.method === 'tools/call')
+    }
+
+    it('exposes the router to pi', async () => {
+      const bridge = new AcpMcpBridge(routerConn() as any, [acpServer('air', 'jetbrains_air_ide')], 'router-expose')
+      try {
+        await bridge.start()
+        assert.deepEqual(
+          bridge.tools.map(tool => tool.exposedName),
+          ['ide_jetbrains_air_ide_execute_tool']
+        )
+      } finally {
+        await bridge.dispose()
+      }
+    })
+
+    it('forwards an allowed command', async () => {
+      const conn = routerConn()
+      const command = 'lint_files --files \'["src/app.py"]\' --min_severity strong_warning'
+      const reply = await callRouter(conn, { command })
+      assert.equal(reply.type, 'result')
+      assert.deepEqual(routedCalls(conn).at(-1)?.params.params, { name: 'execute_tool', arguments: { command } })
+    })
+
+    for (const command of [
+      'xdebug_set_breakpoint --line 3',
+      '  xdebug_start_debugger_session',
+      "'xdebug_control_session' --action resume",
+      '"xdebug_run_to_line" --line 9'
+    ]) {
+      it(`rejects a deny-listed command without calling the IDE: ${command.trim()}`, async () => {
+        const conn = routerConn()
+        const reply = await callRouter(conn, { command })
+        assert.equal(reply.type, 'error')
+        assert.equal(reply.code, 'denied')
+        assert.match(reply.message, /PIDEA_IDE_EXTRA_TOOLS/)
+        assert.equal(routedCalls(conn).length, 0)
+      })
+    }
+
+    it('rejects a call whose command is not a string', async () => {
+      const conn = routerConn()
+      const reply = await callRouter(conn, { command: ['xdebug_set_breakpoint'] })
+      assert.equal(reply.type, 'error')
+      assert.equal(reply.code, 'denied')
+      assert.equal(routedCalls(conn).length, 0)
+    })
+
+    it('forwards a deny-listed command re-allowed by PIDEA_IDE_EXTRA_TOOLS', async () => {
+      const prev = process.env.PIDEA_IDE_EXTRA_TOOLS
+      process.env.PIDEA_IDE_EXTRA_TOOLS = 'xdebug_set_breakpoint'
+      try {
+        const conn = routerConn()
+        const reply = await callRouter(conn, { command: 'xdebug_set_breakpoint --line 3' })
+        assert.equal(reply.type, 'result')
+        assert.equal(routedCalls(conn).length, 1)
+      } finally {
+        if (prev === undefined) delete process.env.PIDEA_IDE_EXTRA_TOOLS
+        else process.env.PIDEA_IDE_EXTRA_TOOLS = prev
+      }
+    })
+  })
+
   it('omits failed servers but keeps successful ones', async () => {
     const conn = new FakeConn()
     conn.failConnect = true
