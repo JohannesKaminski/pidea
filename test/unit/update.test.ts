@@ -1,20 +1,20 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { fetchLatestRelease, runUpdate, type UpdateDeps } from '../../src/update.js'
+import { fetchLatestRelease, installPrefix, runUpdate, type UpdateDeps } from '../../src/update.js'
 
-const GLOBAL_ROOT = '/opt/u/lib/node_modules'
+const PREFIX = '/opt/u/.pi/pidea'
 const TARBALL = 'https://github.com/JohannesKaminski/pidea/releases/download/v0.2.0/pidea-0.2.0.tgz'
 
 function fakeDeps(over: Partial<UpdateDeps> = {}) {
   const output: string[] = []
-  const installs: string[] = []
+  const installs: string[][] = []
   const deps: UpdateDeps = {
     installedVersion: '0.1.0',
-    scriptPath: `${GLOBAL_ROOT}/pidea/dist/index.js`,
-    globalRoot: () => GLOBAL_ROOT,
+    scriptPath: `${PREFIX}/lib/node_modules/pidea/dist/index.js`,
+    platform: 'linux',
     latestRelease: async () => ({ version: '0.2.0', tarballUrl: TARBALL }),
-    npmInstall: url => {
-      installs.push(url)
+    npmInstall: (url, prefix) => {
+      installs.push([url, prefix])
       return { status: 0, stderr: '' }
     },
     out: s => output.push(s),
@@ -33,11 +33,11 @@ test('update --check reports a newer release without installing it', async () =>
   assert.deepEqual(f.installs, [])
 })
 
-test('update installs the newer release tarball and asks for an IDE restart', async () => {
+test('update installs the newer release tarball into its own prefix and asks for an IDE restart', async () => {
   const f = fakeDeps()
   const code = await runUpdate([], f.deps)
   assert.equal(code, 0)
-  assert.deepEqual(f.installs, [TARBALL])
+  assert.deepEqual(f.installs, [[TARBALL, PREFIX]])
   assert.match(f.output(), /Restart the IDE to use pidea 0\.2\.0/)
 })
 
@@ -57,12 +57,23 @@ test('update refuses to install from the npx cache', async () => {
   assert.match(f.output(), /npx cache/)
 })
 
-test('update refuses when pidea is not installed in the npm global folder', async () => {
+test('update refuses when pidea was not installed with npm', async () => {
   const f = fakeDeps({ scriptPath: '/work/pidea/dist/index.js' })
   const code = await runUpdate([], f.deps)
   assert.equal(code, 1)
   assert.deepEqual(f.installs, [])
-  assert.match(f.output(), /not a global npm install/)
+  assert.match(f.output(), /was not installed with npm/)
+})
+
+test('installPrefix finds the npm prefix of an installed pidea', () => {
+  assert.equal(installPrefix('/opt/u/.pi/pidea/lib/node_modules/pidea/dist/index.js', 'linux'), '/opt/u/.pi/pidea')
+  assert.equal(installPrefix('/usr/local/lib/node_modules/pidea/dist/index.js', 'darwin'), '/usr/local')
+  assert.equal(
+    installPrefix('C:\\Users\\u\\AppData\\Roaming\\npm\\node_modules\\pidea\\dist\\index.js', 'win32'),
+    'C:\\Users\\u\\AppData\\Roaming\\npm'
+  )
+  assert.equal(installPrefix('/work/pidea/dist/index.js', 'linux'), null)
+  assert.equal(installPrefix('/work/app/node_modules/pidea/dist/index.js', 'linux'), null)
 })
 
 test('update explains how to avoid sudo when npm fails with EACCES', async () => {
@@ -71,9 +82,9 @@ test('update explains how to avoid sudo when npm fails with EACCES', async () =>
   })
   const code = await runUpdate([], f.deps)
   assert.equal(code, 1)
-  assert.match(f.output(), /without sudo/)
-  assert.match(f.output(), /nvm/)
-  assert.match(f.output(), /npm config set prefix ~\/\.local/)
+  assert.match(f.output(), /may not write to \/opt\/u\/\.pi\/pidea/)
+  assert.match(f.output(), /Don't use sudo/)
+  assert.match(f.output(), /installer from the README/)
   assert.doesNotMatch(f.output(), /Restart the IDE/)
 })
 

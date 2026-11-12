@@ -1,6 +1,6 @@
 import crossSpawn from 'cross-spawn'
 import { existsSync } from 'node:fs'
-import { dirname, isAbsolute, join, relative } from 'node:path'
+import { delimiter, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildInfo } from './build-info.js'
 import { compareSemver } from './semver.js'
@@ -15,10 +15,10 @@ export interface UpdateDeps {
   installedVersion: string
   /** Path of the running adapter script. */
   scriptPath: string
-  /** npm's global node_modules folder, or null when npm cannot tell. */
-  globalRoot: () => string | null
+  platform?: NodeJS.Platform
   latestRelease: () => Promise<Release>
-  npmInstall: (tarballUrl: string) => { status: number | null; stderr: string }
+  /** `npm install --global --prefix <prefix> <tarball>`. */
+  npmInstall: (tarballUrl: string, prefix: string) => { status: number | null; stderr: string }
   out: (text: string) => void
 }
 
@@ -41,22 +41,39 @@ export async function fetchLatestRelease(fetchImpl: typeof fetch = fetch): Promi
   return { version, tarballUrl: asset.browser_download_url }
 }
 
-/** The real environment: the npm next to the running node, so installs land in the same global prefix. */
+/**
+ * The npm prefix pidea was installed into, read from the running script's path:
+ * <prefix>/lib/node_modules/pidea/dist/index.js, or <prefix>\node_modules\pidea\dist\index.js on
+ * Windows. That covers npm's global folder and the installer's ~/.pi/pidea alike. Null when
+ * pidea runs from somewhere else, such as a source checkout.
+ */
+export function installPrefix(scriptPath: string, platform: NodeJS.Platform = process.platform): string | null {
+  const match =
+    platform === 'win32'
+      ? /^(.+)[\\/]node_modules[\\/]pidea[\\/]dist[\\/][^\\/]+$/.exec(scriptPath)
+      : /^(.+)\/lib\/node_modules\/pidea\/dist\/[^/]+$/.exec(scriptPath)
+  return match ? match[1] : null
+}
+
+/** The real environment: the npm next to the running node, which may not be on PATH (pi's own Node.js). */
 export function defaultUpdateDeps(): UpdateDeps {
-  const bundled = join(dirname(process.execPath), process.platform === 'win32' ? 'npm.cmd' : 'npm')
+  const nodeDir = dirname(process.execPath)
+  const bundled = join(nodeDir, process.platform === 'win32' ? 'npm.cmd' : 'npm')
   const npm = existsSync(bundled) ? bundled : 'npm'
   return {
     installedVersion: buildInfo.packageVersion,
     scriptPath: fileURLToPath(import.meta.url),
-    globalRoot: () => {
-      const result = crossSpawn.sync(npm, ['root', '-g'], { encoding: 'utf8' })
-      return result.status === 0 ? String(result.stdout).trim() || null : null
-    },
     latestRelease: () => fetchLatestRelease(),
-    npmInstall: url => {
-      const result = crossSpawn.sync(npm, ['install', '-g', url], {
+    npmInstall: (url, prefix) => {
+      const result = crossSpawn.sync(npm, ['install', '--global', '--prefix', prefix, '--no-audit', '--no-fund', url], {
         encoding: 'utf8',
-        stdio: ['ignore', 'inherit', 'pipe']
+        stdio: ['ignore', 'inherit', 'pipe'],
+        // npm's launcher starts with `#!/usr/bin/env node`, so the running node has to be on PATH
+        // (npm.cmd on Windows calls the node.exe next to it).
+        env:
+          process.platform === 'win32'
+            ? process.env
+            : { ...process.env, PATH: `${nodeDir}${delimiter}${process.env.PATH ?? ''}` }
       })
       return { status: result.status, stderr: String(result.stderr ?? '') }
     },
@@ -84,26 +101,25 @@ export async function runUpdate(argv: string[], deps: UpdateDeps): Promise<numbe
   }
   if (isEphemeralInstall(deps.scriptPath)) {
     deps.out(
-      'pidea update: running from the npx cache, which can be deleted at any time. Install pidea globally (see the README) instead.\n'
+      'pidea update: running from the npx cache, which can be deleted at any time. Install pidea as described in the README instead.\n'
     )
     return 1
   }
-  const root = deps.globalRoot()
-  const rel = root ? relative(root, deps.scriptPath) : '..'
-  if (rel.startsWith('..') || isAbsolute(rel)) {
+  const prefix = installPrefix(deps.scriptPath, deps.platform)
+  if (!prefix) {
     deps.out(
-      `pidea update: ${deps.scriptPath} is not a global npm install, so npm would update a different copy. Install the release tarball where you installed pidea, or reinstall globally (see the README).\n`
+      `pidea update: ${deps.scriptPath} was not installed with npm (a source checkout?), so there is nothing to update. Install pidea as described in the README.\n`
     )
     return 1
   }
-  deps.out(`Installing ${latest.tarballUrl}\n`)
-  const result = deps.npmInstall(latest.tarballUrl)
+  deps.out(`Installing ${latest.tarballUrl} into ${prefix}\n`)
+  const result = deps.npmInstall(latest.tarballUrl, prefix)
   if (result.status !== 0) {
     deps.out(`pidea update: npm install failed:\n${result.stderr}`)
     if (result.stderr.includes('EACCES')) {
       // Never escalate with sudo; point at the two fixes npm documents instead.
       deps.out(
-        '\nnpm may not write to its global folder. To install without sudo, either install Node.js with a version manager such as nvm (recommended), or set a user prefix (not on Windows): `npm config set prefix ~/.local` and add ~/.local/bin to your PATH. Then install pidea again.\nhttps://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally\n'
+        `\nnpm may not write to ${prefix}. Don't use sudo: on macOS and Linux, reinstall pidea with the installer from the README, which installs into your home folder. Otherwise install Node.js with a version manager such as nvm.\nhttps://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally\n`
       )
     }
     return 1

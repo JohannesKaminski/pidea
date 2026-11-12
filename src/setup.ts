@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { delimiter, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -22,6 +22,29 @@ type Json = Record<string, unknown>
 /** True when the script lives in npx's throwaway cache, which can be deleted at any time. */
 export function isEphemeralInstall(scriptPath: string): boolean {
   return /[\\/]_npx[\\/]/.test(scriptPath)
+}
+
+/**
+ * The Node.js pi's installer sets up lives in a versioned folder behind a `current` link
+ * (~/.local/share/pi-node/current, %LOCALAPPDATA%\pi-node\current on Windows). process.execPath
+ * resolves that link, so the IDE entry would break once pi installs a newer Node.js. Use the
+ * link instead when it points at the running node.
+ */
+export function stableNodePath(
+  execPath: string,
+  env: NodeJS.ProcessEnv = process.env,
+  platform: NodeJS.Platform = process.platform
+): string {
+  const current =
+    platform === 'win32'
+      ? env.LOCALAPPDATA && join(env.LOCALAPPDATA, 'pi-node', 'current', 'node.exe')
+      : join(env.XDG_DATA_HOME || join(homedir(), '.local', 'share'), 'pi-node', 'current', 'bin', 'node')
+  if (!current) return execPath
+  try {
+    return realpathSync(current) === realpathSync(execPath) ? current : execPath
+  } catch {
+    return execPath
+  }
 }
 
 function uniq(items: string[]): string[] {
@@ -100,6 +123,7 @@ export function runSetup(argv: string[]): number {
     return 1
   }
   const piPath = findPi()
+  const nodePath = stableNodePath(process.execPath)
 
   let existing: Json = {}
   if (existsSync(config)) {
@@ -112,7 +136,7 @@ export function runSetup(argv: string[]): number {
   }
 
   const entry = buildEntry({
-    nodePath: process.execPath,
+    nodePath,
     scriptPath,
     piPath,
     basePath: process.env.PATH ?? ''
@@ -136,7 +160,7 @@ export function runSetup(argv: string[]): number {
   if (backedUp) copyFileSync(config, bak)
   writeFileSync(config, text)
   process.stdout.write(
-    `Wrote agent "${name}" to ${config}${backedUp ? ` (previous file saved as ${bak})` : ''}.\nnode: ${process.execPath}\npi:   ${piPath ?? 'not found'}\nRestart the IDE, then pick "${name}" in the AI Chat.\n`
+    `Wrote agent "${name}" to ${config}${backedUp ? ` (previous file saved as ${bak})` : ''}.\nnode: ${nodePath}\npi:   ${piPath ?? 'not found'}\nRestart the IDE, then pick "${name}" in the AI Chat.\n`
   )
   return 0
 }

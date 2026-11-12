@@ -1,6 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { buildEntry, isEphemeralInstall, mergeConfig } from '../../src/setup.js'
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { buildEntry, isEphemeralInstall, mergeConfig, stableNodePath } from '../../src/setup.js'
 
 const base = {
   nodePath: '/opt/node/bin/node',
@@ -44,3 +47,23 @@ test('mergeConfig on an empty file enables IDE MCP', () => {
   const m = mergeConfig({}, 'pidea', buildEntry(base)) as any
   assert.equal(m.default_mcp_settings.use_idea_mcp, true)
 })
+
+test(
+  'stableNodePath swaps a versioned pi-node path for the current link',
+  { skip: process.platform === 'win32' },
+  t => {
+    const data = mkdtempSync(join(tmpdir(), 'pidea-setup-'))
+    t.after(() => rmSync(data, { recursive: true, force: true }))
+    const versioned = join(data, 'pi-node', 'node-v22.23.5-linux-x64', 'bin')
+    mkdirSync(versioned, { recursive: true })
+    writeFileSync(join(versioned, 'node'), '')
+    symlinkSync(join(data, 'pi-node', 'node-v22.23.5-linux-x64'), join(data, 'pi-node', 'current'))
+    const env = { XDG_DATA_HOME: data }
+
+    assert.equal(stableNodePath(join(versioned, 'node'), env, 'linux'), join(data, 'pi-node', 'current', 'bin', 'node'))
+    // Any other node (nvm, Homebrew, ...) stays as it is.
+    assert.equal(stableNodePath(process.execPath, env, 'linux'), process.execPath)
+    // No pi-node install at all.
+    assert.equal(stableNodePath(process.execPath, { XDG_DATA_HOME: join(data, 'missing') }, 'linux'), process.execPath)
+  }
+)

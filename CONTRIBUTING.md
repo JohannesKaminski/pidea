@@ -21,7 +21,7 @@ npm run lint
 npm run test         # unit, component, and end-to-end tests
 npm run typecheck
 npm run format
-npm run check:pack   # pack, install into a clean prefix, check the installed adapter starts
+npm run check:pack   # pack, install with scripts/install.sh into a clean prefix, check the installed adapter starts
 npm run smoke        # core stdio smoke tests against your real pi and model
 npm run smoke:full   # full matrix; run this before a release
 node scripts/check.mjs
@@ -46,7 +46,7 @@ To see what a client actually sends, set `PIDEA_DEBUG_ACP=1` and read `~/.pi/pid
 ## CI
 
 - `check.yml` runs the repository check, tests, lint, typecheck, build, and the packaging check on Linux (Node 22 and 24) and Windows (Node 24).
-- `release.yml` runs on `v*` tags: the end-to-end tests against pi 1.0.0 and the latest pi, the same checks, a check that the tag matches the package version, and then it publishes a GitHub Release with the `npm pack` tarball, once as `pidea-<version>.tgz` and once as `pidea.tgz` for the README's `releases/latest/download/pidea.tgz` link.
+- `release.yml` runs on `v*` tags: the end-to-end tests against pi 1.0.0 and the latest pi, the same checks, a check that the tag matches the package version, and then it publishes a GitHub Release with the `npm pack` tarball, once as `pidea-<version>.tgz` and once as `pidea.tgz`, plus `scripts/install.sh` as `install.sh`. The fixed names keep the `releases/latest/download/` links in the README and the installer working.
 
 ## Releasing
 

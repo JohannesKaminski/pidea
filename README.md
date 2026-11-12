@@ -9,21 +9,29 @@ This project started as a fork of [svkozak/pi-acp](https://github.com/svkozak/pi
 
 ## Requirements
 
-- Node.js 22.19 or newer
 - pi 1.0.0 or newer, with a working model: run `pi` once in a terminal to check
+- macOS or Linux. On Windows, see [Windows](#windows).
 
 ## Install
+
+```bash
+curl -fsSL https://github.com/JohannesKaminski/pidea/releases/latest/download/install.sh | sh
+```
+
+Then restart the IDE and pick **pidea** in the AI Chat.
+
+The installer runs pidea on the same Node.js as pi: the one pi's installer put in `~/.local/share/pi-node`, or else `node` on your `PATH` (22.19 or newer). It installs pidea into `~/.pi/pidea`, adds a `pidea` command to `~/.local/bin`, and runs [`pidea setup`](#what-pidea-setup-does). Nothing is installed globally, and nothing needs sudo. Other ACP clients only need `pidea` as their agent command.
+
+To install a version other than the latest (see the [releases page](https://github.com/JohannesKaminski/pidea/releases)), put it in front of `sh`: `... | PIDEA_VERSION=0.2.0 sh`. To uninstall, delete `~/.pi/pidea` and `~/.local/bin/pidea`, and remove the `pidea` entry from `~/.jetbrains/acp.json`.
+
+### Windows
+
+The installer doesn't run on Windows. Install Node.js 22.19 or newer, then:
 
 ```bash
 npm install -g https://github.com/JohannesKaminski/pidea/releases/latest/download/pidea.tgz
 pidea setup
 ```
-
-Then restart the IDE and pick **pidea** in the AI Chat.
-
-The first command installs the latest release (other versions are on the [releases page](https://github.com/JohannesKaminski/pidea/releases)). The second writes the agent entry into `~/.jetbrains/acp.json`; other clients only need `pidea` as their agent command.
-
-If `npm install -g` fails with `EACCES` or wants sudo, don't use sudo. Install Node.js with a version manager such as nvm, or give npm a folder in your home: `npm config set prefix ~/.local` and add `~/.local/bin` to your `PATH` (not on Windows). npm explains both in [resolving EACCES errors](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally).
 
 ## Update
 
@@ -31,15 +39,15 @@ If `npm install -g` fails with `EACCES` or wants sudo, don't use sudo. Install N
 pidea update
 ```
 
-Then restart the IDE. `pidea update --check` only shows the installed and the latest version. pidea also tells you in the chat when a new pidea or pi release is out.
+Then restart the IDE. `pidea update` installs the latest release where the running pidea is installed. `pidea update --check` only shows the installed and the latest version. pidea also tells you in the chat when a new pidea or pi release is out.
 
 ## What `pidea setup` does
 
 It adds a `pidea` entry to `~/.jetbrains/acp.json` with absolute paths to `node`, pidea and `pi`, and an explicit `PATH`, so the IDE finds everything no matter how it was started. Your other agents and settings in that file stay as they are, and the original file is saved once as `acp.json.bak`.
 
-Run it again after you switch Node.js versions or move pi. Options: `--dry-run` prints the result without writing it, `--name <entry>` picks another entry name, and `--config <path>` writes to another file.
+Run it again after you switch Node.js versions or move pi. If pidea runs on pi's own Node.js, the entry points at `~/.local/share/pi-node/current`, so it keeps working when pi updates that Node.js. Options: `--dry-run` prints the result without writing it, `--name <entry>` picks another entry name, and `--config <path>` writes to another file.
 
-To write the entry yourself, open the AI Chat menu (upper-right corner), choose **Add Custom Agent**, and use absolute paths from `which pidea`, `which node`, and `which pi` (`where` on Windows, with `;` between `PATH` entries):
+To write the entry yourself, open the AI Chat menu (upper-right corner), choose **Add Custom Agent**, and use absolute paths from `which pidea` and `which pi`, plus `which node` if you installed pidea with npm (`where` on Windows, with `;` between `PATH` entries):
 
 ```json
 {

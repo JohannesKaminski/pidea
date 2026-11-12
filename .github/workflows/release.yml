@@ -1,7 +1,7 @@
 name: release
 
 # Pushing a v* tag checks the build, runs e2e against the minimum and latest supported pi,
-# and publishes a GitHub Release with the npm pack tarball attached.
+# and publishes a GitHub Release with the npm pack tarball and the installer script attached.
 on:
   push:
     tags: ['v*']
@@ -50,9 +50,10 @@ jobs:
       - run: npm run typecheck
       - run: npm run check:pack
       - run: npm pack
-      # pidea.tgz keeps one name across releases, so releases/latest/download/pidea.tgz always works.
-      - run: cp pidea-*.tgz pidea.tgz
+      # pidea.tgz and install.sh keep one name across releases, so the README's
+      # releases/latest/download/ links always work.
+      - run: cp pidea-*.tgz pidea.tgz && cp scripts/install.sh install.sh
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" pidea-*.tgz pidea.tgz --verify-tag --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" pidea-*.tgz pidea.tgz install.sh --verify-tag --generate-notes
