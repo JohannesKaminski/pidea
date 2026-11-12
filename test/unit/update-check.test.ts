@@ -67,7 +67,7 @@ test('a cache older than 24 hours is refreshed from the lookups', async () => {
   assert.deepEqual(JSON.parse(readFileSync(deps.cachePath, 'utf8')), { checkedAt: NOW, pidea: '0.3.0', pi: '1.5.0' })
 })
 
-test('hanging or failing lookups give no notice within the timeout and cache nothing', async () => {
+test('hanging or failing lookups give no notice within the timeout and cache nothing', async t => {
   const { deps } = fakeDeps({
     latestPidea: () => new Promise<string>(() => {}),
     latestPi: async () => {
@@ -75,6 +75,10 @@ test('hanging or failing lookups give no notice within the timeout and cache not
     },
     timeoutMs: 50
   })
+  // checkForUpdates unrefs its timeout so it never keeps pidea alive. With the lookup hanging,
+  // nothing else would keep this test's event loop alive, and node:test would cancel the test.
+  const keepAlive = setTimeout(() => {}, 5000)
+  t.after(() => clearTimeout(keepAlive))
   const started = Date.now()
   assert.deepEqual(await checkForUpdates(deps), [])
   assert.ok(Date.now() - started < 1000)
