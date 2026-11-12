@@ -146,7 +146,7 @@ export function runSetup(argv: string[]): number {
 
   if (!piPath) {
     process.stderr.write(
-      'pidea setup: warning: `pi` was not found on PATH. Install pi with `npm install -g @earendil-works/pi-coding-agent`, then run setup again.\n'
+      'pidea setup: warning: `pi` was not found on PATH. Install pi with its installer (https://pi.dev), then run setup again.\n'
     )
   }
   if (dryRun) {

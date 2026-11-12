@@ -224,7 +224,7 @@ export class PiRpcProcess {
           : undefined
       if (code === 'ENOENT') {
         throw new PiRpcSpawnError(
-          `Could not start pi: executable not found (command: ${cmd}). Pi needs to be installed before it can run in ACP clients. Install it via \`npm install -g @earendil-works/pi-coding-agent\` or ensure \`pi\` is on your PATH. Then try again.`,
+          `Could not start pi: executable not found (command: ${cmd}). Pi needs to be installed before it can run in ACP clients. Install pi with its installer (https://pi.dev), or put \`pi\` on your PATH. Then try again.`,
           { code, cause: error }
         )
       }

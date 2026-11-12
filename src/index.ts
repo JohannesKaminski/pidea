@@ -33,7 +33,7 @@ if (process.argv.includes('--terminal-login')) {
 
   if ((res as any).error && (res as any).error.code === 'ENOENT') {
     process.stderr.write(
-      `pidea: could not start pi (command not found: ${cmd}). Install it via \`npm install -g @earendil-works/pi-coding-agent\` or ensure \`pi\` is on your PATH.\n`
+      `pidea: could not start pi (command not found: ${cmd}). Install pi with its installer (https://pi.dev), or put \`pi\` on your PATH.\n`
     )
     process.exit(1)
   }
