@@ -7,7 +7,6 @@ dist
 # ESLint cache
 .eslintcache
 
-/agentDocs
 .DS_Store
 
 # pi and pidea project state (pidea writes inspection reports to .pi/work/)
@@ -15,18 +14,11 @@ dist
 
 # IntelliJ user-local workspace state
 .idea/
-
-# Half-finished pnpm conversion experiment (repo publishes via npm)
-pnpm-lock.yaml
-pnpm-workspace.yaml
+*.iml
 
 # Local agent/IDE state — not part of the project
 AGENTS.md
 CLAUDE.md
-.cgcignore
-docs/
-inspection/
 inspections/*
 !inspections/README.md
 !inspections/*.inspection.kts
-inspirations/

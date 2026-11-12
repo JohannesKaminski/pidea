@@ -1,7 +1,7 @@
 // Smoke: /changelog slash command round-trips through the adapter.
 // A successful exit proves the adapter routed the command and streamed pi's
 // reply; the semantic content (changelog vs installation-lookup failure) is
-// printed so environment-dependent pi behavior stays visible (findings F-012).
+// printed so environment-dependent pi behavior stays visible.
 import { SmokeHarness, assert } from './lib/acp-smoke.mjs'
 
 const h = new SmokeHarness().start()

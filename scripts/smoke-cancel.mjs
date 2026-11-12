@@ -1,11 +1,11 @@
 // Smoke: session/cancel on the built adapter. Uses a real, long model turn so the
 // cancel lands mid-turn; asserts the cancellation stopReason, no late agent_message_chunk
-// after cancel, and that a follow-up prompt still completes (F-018, F-017).
+// after cancel, and that a follow-up prompt still completes.
 import { SmokeHarness, assert } from './lib/acp-smoke.mjs'
 
 // The probe's phase budgets (stream start <=30s, prompt settle <=60s, no-late
 // window 2s, follow-up <=120s) sum to ~212s worst case, so the harness deadline
-// is raised above that; every phase stays individually bounded (F-004, D-1).
+// is raised above that; every phase stays individually bounded.
 const h = new SmokeHarness({ deadlineMs: 240_000 }).start()
 let cancelSentAt = null
 try {
@@ -15,7 +15,7 @@ try {
   const sessionId = created.sessionId
 
   // Baseline: startup info itself is delivered as an agent_message_chunk, so only
-  // Treat chunks arriving after session/new as proof that the model turn is streaming (P1-5 audit).
+  // Treat chunks arriving after session/new as proof that the model turn is streaming.
   const baseline = h.updates.filter(u => u?.sessionUpdate === 'agent_message_chunk').length
 
   const slow = h.expectResult(

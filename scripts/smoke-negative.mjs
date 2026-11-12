@@ -1,4 +1,4 @@
-// Smoke: ACP protocol negative cases against the built adapter (F-020).
+// Smoke: ACP protocol negative cases against the built adapter.
 import { SmokeHarness, assert } from './lib/acp-smoke.mjs'
 
 const h = new SmokeHarness().start()

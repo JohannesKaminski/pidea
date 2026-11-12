@@ -76,7 +76,7 @@ function loadFile(path: string): SessionMapFile {
   } catch (e) {
     if (existsSync(path)) {
       process.stderr.write(
-        `[pidea] session map ${path} is unreadable; starting with an empty map (P2-7 audit): ${e instanceof Error ? e.message : String(e)}\n`
+        `[pidea] session map ${path} is unreadable; starting with an empty map: ${e instanceof Error ? e.message : String(e)}\n`
       )
     }
     return { version: 1, sessions: {} }

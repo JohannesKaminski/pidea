@@ -23,7 +23,7 @@ const DEFAULT_RUNTIME_TIMEOUT_MS = 120_000
 const DEFAULT_MAX_PAGES = 32
 const DEFAULT_MAX_TOOLS = 512
 
-/** Single diagnostic text for tools/list_changed so both paths dedupe (F-023). */
+/** Single diagnostic text for tools/list_changed so both paths dedupe. */
 const LIST_CHANGED_DIAGNOSTIC = 'IDE bridge: tools/list_changed advertised; catalog is a session snapshot'
 
 export interface AcpMcpBridgeOptions {

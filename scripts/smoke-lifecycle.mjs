@@ -1,6 +1,6 @@
 // Smoke: session lifecycle on the built adapter against an isolated agent dir —
 // create -> list -> prompt (seed) -> close -> load (replay) -> delete -> delete
-// (idempotent) -> list absent, then assert the isolated dir is removed (F-019, F-027).
+// (idempotent) -> list absent, then assert the isolated dir is removed.
 import { existsSync } from 'node:fs'
 import { SmokeHarness, assert } from './lib/acp-smoke.mjs'
 
@@ -22,7 +22,7 @@ try {
   sessionId = created?.sessionId
   assert(typeof sessionId === 'string' && sessionId.length > 0, 'missing sessionId')
 
-  // Seed the session first so Pi's session log exists before listing (F-019).
+  // Seed the session first so Pi's session log exists before listing.
   const seeded = await h1.expectResult(
     3,
     'session/prompt',

@@ -1,5 +1,5 @@
-// Smoke: non-empty MCP descriptor end to end against the built adapter (F-006,
-// F-021, F-028). Spawns a fake stdio MCP server via session/new.mcpServers,
+// Smoke: non-empty MCP descriptor end to end against the built adapter.
+// Spawns a fake stdio MCP server via session/new.mcpServers,
 // asserts bridge discovery/registration surfaces in startupInfo, that the
 // descriptor secret never leaks to adapter stderr, and that a real model turn
 // can invoke the bridged tool through the full IPC path.
@@ -90,7 +90,7 @@ try {
   assert(r?.stopReason === 'end_turn', `tool-call turn stopReason=${r?.stopReason}`)
   await waitForLog(m => m?.type === 'call' && m.name === 'echo', 'tools/call invocation', 30_000)
 
-  // F-028: the descriptor secret must never reach adapter stderr; env values
+  // The descriptor secret must never reach adapter stderr; env values
   // must be redacted in the PIDEA_DEBUG_BRIDGE dump.
   const stderr = h.stderr.join('\n')
   assert(!stderr.includes(secret), 'descriptor secret leaked to adapter stderr')

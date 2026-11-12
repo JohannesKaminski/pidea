@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # engines >=22.19 (pi 1.0 minimum); 24 is the current CI baseline (F-031).
+        # engines >=22.19 (pi 1.0 minimum); 24 is the current CI baseline.
         os: [ubuntu-latest]
         node: [22, 24]
         include:

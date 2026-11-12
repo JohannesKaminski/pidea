@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { SessionStore } from '../../src/acp/session-store.js'
 
-test('SessionStore round-trips with atomic writes and leaves no temp files (P2-7 audit)', () => {
+test('SessionStore round-trips with atomic writes and leaves no temp files', () => {
   const dir = mkdtempSync(join(tmpdir(), 'pidea-store-'))
   const path = join(dir, 'session-map.json')
   const store = new SessionStore(path)

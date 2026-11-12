@@ -28,7 +28,7 @@ try {
   matches(startupInfo, /## Skills/, 'startupInfo Skills section')
   matches(startupInfo, /## Extensions/, 'startupInfo Extensions section')
 
-  // F-010: payload budget. The prelude carries the local skill/prompt inventory;
+  // Payload budget. The prelude carries the local skill/prompt inventory;
   // a pathological regression (duplicated sections, leaked dumps) must fail.
   const STARTUP_BUDGET = 32_000 // chars; current nominal ~9.6k
   assert(startupInfo.length <= STARTUP_BUDGET, `startupInfo ${startupInfo.length} chars exceeds ${STARTUP_BUDGET}`)

@@ -1,5 +1,5 @@
 // Smoke: two concurrent session/prompt turns on one session resolve in order
-// through the adapter's client-side one-at-a-time queue (F-014, P1-5 audit).
+// through the adapter's client-side one-at-a-time queue.
 // Queue control semantics are pi-side; this probe proves the adapter serializes
 // concurrent ACP prompts and reports every JSON-RPC result.
 import { SmokeHarness, assert } from './lib/acp-smoke.mjs'

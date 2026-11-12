@@ -117,7 +117,7 @@ export class PiRpcProcess {
     return this.stderrTail.slice(-limit)
   }
 
-  /** Register a handler invoked when the child process exits (P1-1 audit). */
+  /** Register a handler invoked when the child process exits. */
   onExit(handler: (code: number | null, signal: NodeJS.Signals | null) => void): void {
     this.exitHandlers.push(handler)
   }
@@ -167,7 +167,7 @@ export class PiRpcProcess {
 
     child.stderr.on('data', chunk => {
       // Retain a bounded tail for diagnostics; the raw stream stays untouched so ACP
-      // clients (which capture stderr) still receive the original output (P1-3 audit).
+      // clients (which capture stderr) still receive the original output.
       for (const line of String(chunk).split('\n')) {
         if (line.length > 0) this.stderrTail.push(line)
       }

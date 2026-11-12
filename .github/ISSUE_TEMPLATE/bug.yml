@@ -14,7 +14,7 @@ body:
     id: reproduction
     attributes:
       label: Reproduction steps
-      description: Exact commands or steps that trigger the failure.
+      description: Exact steps or commands that trigger the failure.
     validations:
       required: true
   - type: textarea
@@ -28,20 +28,21 @@ body:
     id: area
     attributes:
       label: Area
-      options: [prompts, skills, fabric, cgc, templates, docs, workflow, other]
+      options: [chat / ACP, IDE tools (MCP), IntelliJ-first mode, setup / update, docs, other]
     validations:
       required: true
   - type: input
-    id: artifact
+    id: versions
     attributes:
-      label: Artifact path
-      description: '.pi/work/<issue>-<slug>/ once /fix or /create runs.'
+      label: Versions
+      description: 'pidea, pi, Node.js, IDE and OS, e.g. "pidea 0.2.0, pi 1.0.0, Node 24, IntelliJ IDEA 2026.2, macOS".'
     validations:
-      required: false
+      required: true
   - type: textarea
     id: evidence
     attributes:
-      label: Failure evidence
-      description: Output tails, exit codes, or file:line references.
+      label: Logs
+      description: Error messages, or the relevant part of ~/.pi/pidea/acp-debug.log (set PIDEA_DEBUG_ACP=1).
+      render: text
     validations:
       required: false

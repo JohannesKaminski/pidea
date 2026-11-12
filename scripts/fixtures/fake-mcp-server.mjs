@@ -1,4 +1,4 @@
-// Minimal MCP stdio server for smoke-mcp-fixture (F-006/F-021).
+// Minimal MCP stdio server for smoke-mcp-fixture.
 // Speaks the MCP JSON-RPC subset the adapter bridge needs: initialize,
 // notifications/initialized, tools/list, tools/call. Logs received methods and
 // calls to a file the probe asserts on; exits when stdin closes or after 120s.

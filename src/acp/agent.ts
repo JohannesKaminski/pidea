@@ -91,7 +91,7 @@ type AdvertisedModel = {
 const MODEL_CONFIG_ID = 'model'
 const THOUGHT_LEVEL_CONFIG_ID = 'thought_level'
 
-// Startup inventory bounds (P2-12 audit): per-section caps plus a hard markdown cap
+// Startup inventory bounds: per-section caps plus a hard markdown cap
 // keep session/new bounded even with pathological skill trees or symlink cycles.
 const SKILL_ITEMS_CAP = 300
 const PROMPT_ITEMS_CAP = 100
@@ -886,7 +886,7 @@ export class PideaAgent implements ACPAgent {
           // On Node installs, `pi` typically resolves to .../@earendil-works/pi-coding-agent/dist/cli.js
           try {
             // Use the configured pi command (PIDEA_PI_COMMAND) so the changelog
-            // lookup matches the executable the adapter actually spawns (F-024).
+            // lookup matches the executable the adapter actually spawns.
             const piCommand = getPiCommand(process.env.PIDEA_PI_COMMAND)
             const whichCmd = process.platform === 'win32' ? 'where' : 'which'
             const which = spawnSync(whichCmd, [piCommand], { encoding: 'utf-8' })
@@ -1143,7 +1143,7 @@ export class PideaAgent implements ACPAgent {
   }
 
   /**
-   * Deterministic post-turn IDE inspection gate (F-021/F-030). Runs the IDE's
+   * Deterministic post-turn IDE inspection gate. Runs the IDE's
    * own lint_files/get_file_problems tools over this turn's changed files via
    * the bridge connection, persists a report, and surfaces a summary. Never
    * throws: an unavailable bridge/tool or any failure degrades to a diagnostic
@@ -1220,7 +1220,7 @@ export class PideaAgent implements ACPAgent {
     if (!session) return
     // ACP cancel is a notification; never block message dispatch on pi's abort RPC
     // (which can be slow when pi is mid-turn). Queue clearing is synchronous inside
-    // session.cancel(); the rest runs in the background (F-018).
+    // session.cancel(); the rest runs in the background.
     void session.cancel().catch(e => {
       process.stderr.write(`[pidea] session/cancel abort failed: ${String((e as Error)?.message ?? e)}\n`)
     })
@@ -1700,7 +1700,7 @@ export class PideaAgent implements ACPAgent {
       try {
         if (existsSync(sessionFile)) unlinkSync(sessionFile)
       } catch (e) {
-        // Report cleanup failures through the reserved _meta extension (P2-8 audit):
+        // Report cleanup failures through the reserved _meta extension:
         // keep the mapping so a retry can delete the session again.
         return {
           _meta: {
@@ -2127,7 +2127,7 @@ export function buildStartupInfo(opts: {
 
   // Context
   // Prefer cwd-relative or ~ labels over machine-specific absolute paths so the
-  // prelude stays portable (F-011).
+  // prelude stays portable.
   const displayPath = (p: string): string => {
     const fromCwd = relative(opts.cwd, p)
     if (!fromCwd.startsWith('..') && !fromCwd.startsWith('/') && !/^[A-Za-z]:/.test(fromCwd)) return fromCwd
@@ -2198,7 +2198,7 @@ export function buildStartupInfo(opts: {
       }
 
       // Recursive SKILL.md under subdirectories with symlink-cycle protection and a
-      // hard item cap so pathological trees cannot hang session/new (P2-12 audit).
+      // hard item cap so pathological trees cannot hang session/new.
       const visited = new Set<string>()
       const stack: string[] = [root]
       while (stack.length && skillsItems.length < SKILL_ITEMS_CAP) {
@@ -2304,7 +2304,7 @@ export function buildStartupInfo(opts: {
   // Do NOT include themes (per request).
   const text = md.join('\n').trim() + '\n'
   // Hard production cap so pathological trees cannot balloon session/new
-  // regardless of the per-section caps above (P2-12 audit).
+  // regardless of the per-section caps above.
   return text.length > MAX_STARTUP_MD ? `${text.slice(0, MAX_STARTUP_MD)}\n… (startup info truncated by pidea)\n` : text
 }
 

@@ -20,7 +20,7 @@ export interface BuildInfo {
   packageVersion: string
   /** True when built through tsup (constants injected), false in dev/tests. */
   isRelease: boolean
-  /** True when the git tree had uncommitted changes at build time (P2-15 audit). */
+  /** True when the git tree had uncommitted changes at build time. */
   dirty: boolean
 }
 

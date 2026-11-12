@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { sanitizeBridgeDescriptors } from '../../src/acp/agent.js'
 
-test('sanitizeBridgeDescriptors redacts nested env values by default (F-028)', () => {
+test('sanitizeBridgeDescriptors redacts nested env values by default', () => {
   const out = sanitizeBridgeDescriptors([
     {
       name: 'idea',

@@ -42,7 +42,7 @@ test('PideaSession: cancel clears queued prompts', async () => {
   assert.equal(proc.prompts.length, 1)
 })
 
-test('PideaSession: process exit settles the running prompt (P1-1 audit)', async () => {
+test('PideaSession: process exit settles the running prompt', async () => {
   const conn = new FakeAgentSideConnection()
   const proc = new FakePiRpcProcess()
   const session = new PideaSession({
@@ -61,7 +61,7 @@ test('PideaSession: process exit settles the running prompt (P1-1 audit)', async
   assert.ok(String((session as any).lastError).includes('pi process exited'), 'lastError missing exit diagnostic')
 })
 
-test('PideaSession: dispose settles the running prompt as cancelled (P1-1 audit)', async () => {
+test('PideaSession: dispose settles the running prompt as cancelled', async () => {
   const conn = new FakeAgentSideConnection()
   const proc = new FakePiRpcProcess()
   const session = new PideaSession({
@@ -78,7 +78,7 @@ test('PideaSession: dispose settles the running prompt as cancelled (P1-1 audit)
   assert.equal(await turn, 'cancelled')
 })
 
-test('PideaSession: cancel cancels the bridge before awaiting the pi abort (P1-2 audit)', async () => {
+test('PideaSession: cancel cancels the bridge before awaiting the pi abort', async () => {
   const conn = new FakeAgentSideConnection()
   const proc = new FakePiRpcProcess()
   const order: string[] = []

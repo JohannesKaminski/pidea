@@ -1,4 +1,4 @@
-// Smoke: adapter-enforced post-turn IDE inspection (F-021/F-030). Spawns the
+// Smoke: adapter-enforced post-turn IDE inspection. Spawns the
 // built adapter with a fake MCP server exposing lint_files, points the session
 // at a temp git repo with one modified file, runs a trivial model turn, and
 // asserts the gate invoked lint_files, persisted a report, surfaced a summary,

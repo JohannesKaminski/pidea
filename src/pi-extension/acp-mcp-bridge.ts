@@ -450,7 +450,7 @@ function activateAcpMcpBridgeExtension(pi: ExtensionAPI, runtime: AcpMcpBridgeRu
   // pi's loader throws `Extension runtime not initialized` for runtime action
   // methods while extensions are still loading. IPC frames (and socket close)
   // can arrive in that window when a nested pi inherits a live adapter's IPC
-  // env; defer the policy transition instead of crashing (F-036).
+  // env; defer the policy transition instead of crashing.
   const RUNTIME_NOT_READY_RE = /runtime not initialized|during extension loading/i
   let deferredPolicyRun: (() => void) | undefined
   let deferredPolicyAttempts = 0

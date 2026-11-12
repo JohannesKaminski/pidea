@@ -8,13 +8,13 @@ try {
   const created = await h.expectResult(2, 'session/new', { cwd: process.cwd(), mcpServers: [] })
   assert(typeof created?.sessionId === 'string' && created.sessionId.length > 0, 'missing sessionId')
 
-  // F-010: session/new payload budget; current nominal ~26.8 KB.
+  // Payload budget for session/new; current nominal ~26.8 KB.
   const PAYLOAD_BUDGET = 64_000 // bytes
   const payloadBytes = JSON.stringify(created).length
   assert(payloadBytes <= PAYLOAD_BUDGET, `session/new payload ${payloadBytes} bytes exceeds ${PAYLOAD_BUDGET}`)
 
   // Startup info is delivered as an agent_message_chunk; count only chunks arriving
-  // after session/new as model-turn evidence (P1-5 audit).
+  // after session/new as model-turn evidence.
   const baseline = h.updates.filter(u => u?.sessionUpdate === 'agent_message_chunk').length
 
   const promptResult = await h.expectResult(

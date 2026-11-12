@@ -478,7 +478,7 @@ export class PideaSession {
     const before = this.bridge.diagnostics.length
     const result = await this.bridge.handleIncomingMcpMessage(params, notification)
     // Surface tools/list_changed after startup: the catalog is a per-session snapshot,
-    // so the client should start a new chat to refresh (P2-11 audit, F-023).
+    // so the client should start a new chat to refresh.
     if (notification && String(params?.method ?? '') === 'notifications/tools/list_changed') {
       if (this.bridge.diagnostics.length > before && !this.listChangedSurfaced) {
         this.listChangedSurfaced = true
@@ -486,7 +486,7 @@ export class PideaSession {
           sessionUpdate: 'session_info_update',
           _meta: {
             pidea: {
-              mcp: 'IDE bridge: tools/list_changed advertised; the catalog is a session snapshot — start a new chat to refresh (F-023)'
+              mcp: 'IDE bridge: tools/list_changed advertised; the catalog is a session snapshot — start a new chat to refresh'
             }
           }
         })
@@ -516,7 +516,7 @@ export class PideaSession {
   }
 
   lastError: string | null = null
-  /** Set once so tools/list_changed is surfaced at most once per session (P2-11 audit). */
+  /** Set once so tools/list_changed is surfaced at most once per session. */
   private listChangedSurfaced = false
 
   /**
@@ -530,7 +530,7 @@ export class PideaSession {
       for (const q of this.turnQueue) q.reject(new Error('session disposed'))
       this.turnQueue.length = 0
       this.cancelRequested = true
-      // Settle an in-flight ACP prompt so the request never hangs (P1-1 audit).
+      // Settle an in-flight ACP prompt so the request never hangs.
       const running = this.pendingTurn
       if (running) {
         this.pendingTurn = null
@@ -622,7 +622,7 @@ export class PideaSession {
     }
 
     // Cancel active IDE bridge tool calls for this turn before the (potentially slow)
-    // pi abort RPC: bridge cancellation must never wait on pi mid-generation (P1-2 audit).
+    // pi abort RPC: bridge cancellation must never wait on pi mid-generation.
     this.bridge?.cancelAll()
     // Abort the currently running turn (if any). If nothing is running, this is a no-op.
     await this.proc.abort()
@@ -896,7 +896,7 @@ export class PideaSession {
     })
   }
 
-  /** Process exit while a turn is running settles the ACP prompt (P1-1 audit). */
+  /** Process exit while a turn is running settles the ACP prompt. */
   private handleProcessExit(code: number | null, signal: string | null): void {
     const t = this.pendingTurn
     if (!t) return

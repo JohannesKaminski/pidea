@@ -421,7 +421,7 @@ describe('AcpMcpBridge', () => {
     assert.ok(bridge.diagnostics.some(diagnostic => diagnostic.includes('session snapshot')))
     await bridge.dispose()
   })
-  it('dedupes tools/list_changed diagnostics across both notification paths (F-023)', async () => {
+  it('dedupes tools/list_changed diagnostics across both notification paths', async () => {
     const conn = new FakeConn()
     const bridge = new AcpMcpBridge(conn as any, [acpServer('srv-1', 'IntelliJ')], 'dedupe-list-changed')
     await bridge.start()

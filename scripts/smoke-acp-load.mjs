@@ -4,7 +4,7 @@
 import { SmokeHarness, assert } from './lib/acp-smoke.mjs'
 
 let sessionId
-// Keep the isolated agent dir alive across both adapter processes (F-027):
+// Keep the isolated agent dir alive across both adapter processes:
 // process B loads the session persisted by process A, so the temp dir must
 // survive A's close and be removed only after B finishes.
 const a = new SmokeHarness({ cleanupIsolation: false }).start()

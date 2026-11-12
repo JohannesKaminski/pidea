@@ -26,7 +26,7 @@ test('PiRpcProcess: silent RPC requests reject at the configured deadline', asyn
   assert.equal(await proc.waitForExit(), true)
 })
 
-test('PiRpcProcess retains a stderr tail for diagnostics (P1-3 audit)', async () => {
+test('PiRpcProcess retains a stderr tail for diagnostics', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'pidea-stderr-'))
   const executable = writeNodeExecutable(
     dir,

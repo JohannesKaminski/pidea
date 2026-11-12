@@ -22,7 +22,7 @@ const GRACE_MS = 5_000
 const ISOLATE_TEMP_DIRS = ['sessions', 'cache']
 
 /**
- * Builds an isolated agent dir overlay (F-027): symlink the real pi config so
+ * Builds an isolated agent dir overlay: symlink the real pi config so
  * provider auth/models keep working, keep sessions/cache in a temp dir,
  * and point the adapter session map at the same temp dir.
  */
@@ -116,7 +116,7 @@ export class SmokeHarness {
 
   start() {
     if (this.child) return this
-    // F-027: default dogfood runs against an isolated agent dir so neither the
+    // Default dogfood runs against an isolated agent dir so neither the
     // adapter session map nor Pi's session log touches the real user store.
     this.env = { ...process.env }
     if (this.isolate) {

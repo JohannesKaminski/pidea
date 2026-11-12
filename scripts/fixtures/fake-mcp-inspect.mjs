@@ -1,4 +1,4 @@
-// Minimal MCP stdio server for smoke-ide-inspect (F-021/F-030). Exposes
+// Minimal MCP stdio server for smoke-ide-inspect. Exposes
 // lint_files and get_file_problems so the adapter's post-turn inspection gate
 // can run; lint_files returns one fixed WARNING per file it is asked to lint.
 import { startFakeMcpServer } from './fake-mcp-stdio.mjs'
